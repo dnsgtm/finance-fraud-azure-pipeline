@@ -1,0 +1,95 @@
+{
+    "name": "pl_landing_to_bronze",
+    "properties": {
+        "description": "Metadata-driven ingestion: loops over configured source entities, validates each file landed, then calls the parameterized Databricks notebook to write Bronze Delta tables.",
+        "activities": [
+            {
+                "name": "ForEach_Entity",
+                "type": "ForEach",
+                "typeProperties": {
+                    "items": {
+                        "value": "@pipeline().parameters.p_entities",
+                        "type": "Expression"
+                    },
+                    "isSequential": false,
+                    "batchCount": 5,
+                    "activities": [
+                        {
+                            "name": "CheckFileExists",
+                            "type": "GetMetadata",
+                            "typeProperties": {
+                                "dataset": {
+                                    "referenceName": "ds_landing_generic",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "p_folder_path": {
+                                            "value": "@concat(item().landing_folder, '/ingestion_date=', pipeline().parameters.p_ingestion_date, '/')",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                },
+                                "fieldList": ["exists", "itemName", "lastModified"],
+                                "storeSettings": {
+                                    "type": "AzureBlobFSReadSettings"
+                                }
+                            }
+                        },
+                        {
+                            "name": "IngestToBronze",
+                            "type": "DatabricksNotebook",
+                            "dependsOn": [
+                                {
+                                    "activity": "CheckFileExists",
+                                    "dependencyConditions": ["Succeeded"]
+                                }
+                            ],
+                            "typeProperties": {
+                                "notebookPath": "/Shared/notebooks/01_bronze_ingestion",
+                                "baseParameters": {
+                                    "entity": {
+                                        "value": "@item().entity",
+                                        "type": "Expression"
+                                    },
+                                    "ingestion_date": {
+                                        "value": "@pipeline().parameters.p_ingestion_date",
+                                        "type": "Expression"
+                                    },
+                                    "source_format": {
+                                        "value": "@item().source_format",
+                                        "type": "Expression"
+                                    }
+                                }
+                            },
+                            "linkedServiceName": {
+                                "referenceName": "ls_databricks",
+                                "type": "LinkedServiceReference"
+                            },
+                            "policy": {
+                                "timeout": "0.01:00:00",
+                                "retry": 1,
+                                "retryIntervalInSeconds": 30
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "parameters": {
+            "p_ingestion_date": {
+                "type": "string",
+                "defaultValue": "2026-07-16"
+            },
+            "p_entities": {
+                "type": "array",
+                "defaultValue": [
+                    { "entity": "transactions", "landing_folder": "transactions", "source_format": "csv" },
+                    { "entity": "users", "landing_folder": "users", "source_format": "csv" },
+                    { "entity": "cards", "landing_folder": "cards", "source_format": "csv" },
+                    { "entity": "mcc_codes", "landing_folder": "mcc_codes", "source_format": "json" },
+                    { "entity": "fraud_labels", "landing_folder": "fraud_labels", "source_format": "json" }
+                ]
+            }
+        },
+        "annotations": []
+    }
+}
