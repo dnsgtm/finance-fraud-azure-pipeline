@@ -1,0 +1,10 @@
+{
+	"name": "ls_keyvault",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://kv-finance-fraud-dev-dg.vault.azure.net/"
+		}
+	}
+}
