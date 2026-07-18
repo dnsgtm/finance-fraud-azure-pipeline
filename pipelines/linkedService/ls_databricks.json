@@ -1,0 +1,32 @@
+{
+	"name": "ls_databricks",
+	"properties": {
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "https://adb-7405606104402619.19.azuredatabricks.net",
+			"accessToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_keyvault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "databricks-access-token"
+			},
+			"newClusterNodeType": "Standard_DS3_v2",
+			"newClusterNumOfWorker": "0",
+			"newClusterSparkConf": {
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master": "local[*]",
+				"fs.azure.account.key.storagefinancialfraud.dfs.core.windows.net": "{{secrets/kv-finance-fraud-scope/storagefinancialfraud-accountkey}}"
+			},
+			"newClusterSparkEnvVars": {
+				"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+			},
+			"newClusterVersion": "14.3.x-scala2.12",
+			"clusterOption": "Fixed",
+			"newClusterInitScripts": [],
+			"dataSecurityMode": "SINGLE_USER"
+		}
+	}
+}
