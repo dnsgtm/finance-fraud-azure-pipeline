@@ -13,7 +13,7 @@
 				},
 				"secretName": "databricks-access-token"
 			},
-			"newClusterNodeType": "Standard_DS3_v2",
+			"newClusterNodeType": "Standard_D4ds_v5",
 			"newClusterNumOfWorker": "0",
 			"newClusterSparkConf": {
 				"fs.azure.account.key.storagefinancialfraud.dfs.core.windows.net": "{{secrets/kv-finance-fraud-scope/storagefinancialfraud-accountkey}}"
