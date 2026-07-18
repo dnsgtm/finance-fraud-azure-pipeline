@@ -16,8 +16,6 @@
 			"newClusterNodeType": "Standard_DS3_v2",
 			"newClusterNumOfWorker": "0",
 			"newClusterSparkConf": {
-				"spark.databricks.cluster.profile": "singleNode",
-				"spark.master": "local[*]",
 				"fs.azure.account.key.storagefinancialfraud.dfs.core.windows.net": "{{secrets/kv-finance-fraud-scope/storagefinancialfraud-accountkey}}"
 			},
 			"newClusterSparkEnvVars": {
