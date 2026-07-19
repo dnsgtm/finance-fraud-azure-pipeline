@@ -5,15 +5,21 @@
 			{
 				"name": "ForEach_Entity",
 				"type": "ForEach",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "GetEntityConfig",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@pipeline().parameters.p_entities",
+						"value": "@activity('GetEntityConfig').output.value",
 						"type": "Expression"
 					},
-					"isSequential": false,
-					"batchCount": 5,
+					"isSequential": true,
 					"activities": [
 						{
 							"name": "CheckFileExists",
@@ -93,42 +99,43 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "GetEntityConfig",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_entity_config",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
 			}
 		],
 		"parameters": {
 			"p_ingestion_date": {
 				"type": "string",
 				"defaultValue": "2026-07-16"
-			},
-			"p_entities": {
-				"type": "array",
-				"defaultValue": [
-					{
-						"entity": "transactions",
-						"landing_folder": "transactions",
-						"source_format": "csv"
-					},
-					{
-						"entity": "users",
-						"landing_folder": "users",
-						"source_format": "csv"
-					},
-					{
-						"entity": "cards",
-						"landing_folder": "cards",
-						"source_format": "csv"
-					},
-					{
-						"entity": "mcc_codes",
-						"landing_folder": "mcc_codes",
-						"source_format": "json"
-					},
-					{
-						"entity": "fraud_labels",
-						"landing_folder": "fraud_labels",
-						"source_format": "json"
-					}
-				]
 			}
 		},
 		"annotations": []

@@ -1,0 +1,36 @@
+{
+	"name": "ds_entity_config",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_finance",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "entity_config.json",
+				"folderPath": "_config",
+				"fileSystem": "landing"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"entity": {
+					"type": "string"
+				},
+				"landing_folder": {
+					"type": "string"
+				},
+				"source_format": {
+					"type": "string"
+				},
+				"is_active": {
+					"type": "boolean"
+				}
+			}
+		}
+	}
+}
