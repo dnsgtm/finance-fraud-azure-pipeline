@@ -1,0 +1,7 @@
+[
+  {"entity":"transactions","landing_folder":"transactions","source_format":"csv","is_active":true},
+  {"entity":"users","landing_folder":"users","source_format":"csv","is_active":true},
+  {"entity":"cards","landing_folder":"cards","source_format":"csv","is_active":true},
+  {"entity":"mcc_codes","landing_folder":"mcc_codes","source_format":"json","is_active":true},
+  {"entity":"fraud_labels","landing_folder":"fraud_labels","source_format":"json","is_active":true}
+]
