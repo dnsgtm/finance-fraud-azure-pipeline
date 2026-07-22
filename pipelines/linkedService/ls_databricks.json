@@ -13,18 +13,7 @@
 				},
 				"secretName": "databricks-access-token"
 			},
-			"newClusterNodeType": "Standard_D4s_v3",
-			"newClusterNumOfWorker": "1",
-			"newClusterSparkConf": {
-				"fs.azure.account.key.storagefinancialfraud.dfs.core.windows.net": "{{secrets/kv-finance-fraud-scope/storagefinancialfraud-accountkey}}"
-			},
-			"newClusterSparkEnvVars": {
-				"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-			},
-			"newClusterVersion": "14.3.x-scala2.12",
-			"clusterOption": "Fixed",
-			"newClusterInitScripts": [],
-			"dataSecurityMode": "SINGLE_USER"
+			"existingClusterId": "0722-043535-3pvwsz2w"
 		}
 	}
 }
