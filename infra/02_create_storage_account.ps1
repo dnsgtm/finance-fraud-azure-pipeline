@@ -11,7 +11,7 @@ az storage account create `
   --location $LOCATION `
   --sku $STORAGE_SKU `
   --kind StorageV2 `
-  --hierarchical-namespace true `
+  --hns true `
   --access-tier Hot `
   --output table
 
