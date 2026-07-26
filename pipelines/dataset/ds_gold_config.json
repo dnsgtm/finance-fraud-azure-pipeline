@@ -1,0 +1,36 @@
+{
+	"name": "ds_gold_config",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_finance",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "gold_table_config.json",
+				"folderPath": "_config",
+				"fileSystem": "landing"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"gold_table": {
+					"type": "string"
+				},
+				"silver_source": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"is_active": {
+					"type": "boolean"
+				}
+			}
+		}
+	}
+}
