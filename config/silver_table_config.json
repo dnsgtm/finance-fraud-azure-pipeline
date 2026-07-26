@@ -1,0 +1,6 @@
+[
+  {"silver_table": "dim_customer", "bronze_source": ["users"], "is_active": true},
+  {"silver_table": "dim_card", "bronze_source": ["cards"], "is_active": true},
+  {"silver_table": "dim_mcc", "bronze_source": ["mcc_codes"], "is_active": true},
+  {"silver_table": "fact_transactions", "bronze_source": ["transactions", "fraud_labels"], "is_active": true}
+]

@@ -83,6 +83,7 @@ def transform_customer():
         clean_currency("total_debt").alias("total_debt"),
         F.col("credit_score").cast("int"),
         F.col("num_credit_cards").cast("int"),
+        F.col("_batch_id").alias("_bronze_batch_id"),
     )
 
     df = df.withColumn(
@@ -117,6 +118,7 @@ def transform_card():
         F.to_date(F.col("acct_open_date")).alias("acct_open_date"),
         F.col("year_pin_last_changed").cast("int"),
         F.col("expires"),
+        F.col("_batch_id").alias("_bronze_batch_id"),
     )
 
     df = df.withColumn(
@@ -139,6 +141,7 @@ def transform_mcc():
         F.monotonically_increasing_id().alias("mcc_sk"),
         F.col("mcc_code"),
         F.col("mcc_description"),
+        F.col("_batch_id").alias("_bronze_batch_id"),
     )
 
     return add_ingestion_metadata(df, load_date, "dim_mcc")
@@ -166,6 +169,7 @@ def transform_transactions():
         F.col("mcc").alias("mcc_code"),
         F.when(F.col("errors").isNotNull(), F.lit(True)).otherwise(F.lit(False)).alias("has_error"),
         F.col("errors").alias("error_detail"),
+        F.col("_batch_id").alias("_bronze_batch_id_transactions"),
     )
 
     df = df.join(
@@ -174,6 +178,7 @@ def transform_transactions():
             F.when(F.col("is_fraud_label") == "Yes", True)
              .when(F.col("is_fraud_label") == "No", False)
              .otherwise(F.lit(None)).alias("is_fraud")
+            F.col("_batch_id").alias("_bronze_batch_id_fraud_labels"),
         ),
         on="transaction_id",
         how="left",
