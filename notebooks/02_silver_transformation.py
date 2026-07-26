@@ -177,7 +177,7 @@ def transform_transactions():
             F.col("transaction_id"),
             F.when(F.col("is_fraud_label") == "Yes", True)
              .when(F.col("is_fraud_label") == "No", False)
-             .otherwise(F.lit(None)).alias("is_fraud")
+             .otherwise(F.lit(None)).alias("is_fraud"),
             F.col("_batch_id").alias("_bronze_batch_id_fraud_labels"),
         ),
         on="transaction_id",
