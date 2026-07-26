@@ -49,6 +49,7 @@
 								],
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
 									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
@@ -76,7 +77,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"notebookPath": "/Shared/notebooks/01_bronze_ingestion",
+								"notebookPath": "/Users/gautamdinesh27@hotmail.com/finance-fraud-azure-pipeline/notebooks/01_bronze_ingestion",
 								"baseParameters": {
 									"entity": {
 										"value": "@item().entity",
