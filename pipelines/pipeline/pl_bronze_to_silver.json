@@ -47,7 +47,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('GetSilverConfig').output",
+						"value": "@activity('GetSilverConfig').output.value",
 						"type": "Expression"
 					},
 					"isSequential": true,
