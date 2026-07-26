@@ -87,7 +87,7 @@
 		"parameters": {
 			"p_run_date": {
 				"type": "string",
-				"defaultValue": "2026-07-016"
+				"defaultValue": "2026-07-16"
 			}
 		},
 		"annotations": []
