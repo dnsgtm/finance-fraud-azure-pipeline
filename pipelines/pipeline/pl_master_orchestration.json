@@ -1,0 +1,95 @@
+{
+	"name": "pl_master_orchestration",
+	"properties": {
+		"description": "This will call the three pipelines - bronze, silver and gold.",
+		"activities": [
+			{
+				"name": "Run_Bronze",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_landing_to_bronze",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"p_ingestion_date": {
+							"value": "@pipeline().parameters.p_run_date",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Run_Silver",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Run_Bronze",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_bronze_to_silver",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"p_load_date": {
+							"value": "@pipeline().parameters.p_run_date",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Run_Gold",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Run_Silver",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_silver_to_gold",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"p_load_date": {
+							"value": "@pipeline().parameters.p_run_date",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"p_run_date": {
+				"type": "string",
+				"defaultValue": "2026-07-016"
+			}
+		},
+		"annotations": []
+	}
+}

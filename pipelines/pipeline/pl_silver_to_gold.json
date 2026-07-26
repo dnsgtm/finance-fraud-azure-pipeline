@@ -89,7 +89,7 @@
 		"parameters": {
 			"p_load_date": {
 				"type": "string",
-				"defaultValue": "2027-07-16"
+				"defaultValue": "2026-07-16"
 			}
 		},
 		"annotations": []
