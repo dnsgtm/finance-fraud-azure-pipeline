@@ -17,7 +17,7 @@ dbutils.widgets.text("load_date", "2026-07-16")
 silver_table = dbutils.widgets.get("silver_table")
 load_date = dbutils.widgets.get("load_date")
 
-CATALOG = "dbw_finance_fraud_dev_7405618036778899"
+CATALOG = "cl_finance_fraud_dev"
 
 print(f"silver_table={silver_table} | load_date={load_date}")
 
