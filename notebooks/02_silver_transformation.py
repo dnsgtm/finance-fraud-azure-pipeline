@@ -72,10 +72,7 @@ def transform_customer():
         F.col("birth_year").cast("int"),
         F.col("birth_month").cast("int"),
         F.col("gender"),
-        F.concat_ws(
-            " ",
-            F.regexp_extract(F.col("address"), r",\s*(.*)$", 1)
-        ).alias("city_state_postcode"),
+        F.col("address"),
         round_coordinates("latitude").alias("latitude"),
         round_coordinates("longitude").alias("longitude"),
         clean_currency("per_capita_income").alias("per_capita_income"),
