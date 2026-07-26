@@ -1,0 +1,6 @@
+[
+  {"gold_table": "fraud_summary_by_state", "silver_source": ["fact_transactions"], "is_active": true},
+  {"gold_table": "fraud_summary_by_mcc", "silver_source": ["fact_transactions", "dim_mcc"], "is_active": true},
+  {"gold_table": "monthly_transaction_trends", "silver_source": ["fact_transactions"], "is_active": true},
+  {"gold_table": "customer_risk_profile", "silver_source": ["fact_transactions", "dim_customer", "dim_card"], "is_active": true}
+]

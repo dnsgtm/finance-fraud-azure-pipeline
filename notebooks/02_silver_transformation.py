@@ -92,7 +92,7 @@ def transform_customer():
         )
     )
 
-    return add_ingestion_metadata(df, load_date, "dim_customer")
+    return add_ingestion_metadata(df, load_date, "dim_customer","silver")
 
 # COMMAND ----------
 
@@ -126,7 +126,7 @@ def transform_card():
         )
     )
 
-    return add_ingestion_metadata(df, load_date, "dim_card")
+    return add_ingestion_metadata(df, load_date, "dim_card","silver")
 
 # COMMAND ----------
 
@@ -141,7 +141,7 @@ def transform_mcc():
         F.col("_batch_id").alias("_bronze_batch_id"),
     )
 
-    return add_ingestion_metadata(df, load_date, "dim_mcc")
+    return add_ingestion_metadata(df, load_date, "dim_mcc","silver")
 
 # COMMAND ----------
 
@@ -190,7 +190,7 @@ def transform_transactions():
         )
     )
 
-    return add_ingestion_metadata(df, load_date, "fact_transactions")
+    return add_ingestion_metadata(df, load_date, "fact_transactions", "silver")
 
 # COMMAND ----------
 

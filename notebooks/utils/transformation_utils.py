@@ -41,11 +41,15 @@ def build_dq_flags(*flag_expressions):
     return F.array_compact(F.array(*flag_expressions))
 
 
-def add_ingestion_metadata(df, load_date, table_name):
+def add_ingestion_metadata(df, load_date, table_name, layer):
+    """
+    Adds standard audit columns for a medallion layer (silver or gold).
+    """
+
     return (
         df
-        .withColumn("_silver_loaded_at", F.current_timestamp())
-        .withColumn("_silver_load_date", F.lit(load_date))
-        .withColumn("_silver_table", F.lit(table_name))
-        .withColumn("_silver_batch_id", F.lit(f"{table_name}_{load_date}"))
+        .withColumn(f"_{layer}_loaded_at", F.current_timestamp())
+        .withColumn(f"_{layer}_load_date", F.lit(load_date))
+        .withColumn(f"_{layer}_table", F.lit(table_name))
+        .withColumn(f"_{layer}_batch_id", F.lit(f"{table_name}_{load_date}"))
     )
