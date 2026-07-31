@@ -4,6 +4,20 @@
 # MAGIC Generic transformation notebook - handles all 4 silver tables via widget
 # MAGIC params (silver_table, load_date). Called once per table by the ForEach
 # MAGIC loop in pl_bronze_to_silver. Sources shared logic from utils/transformation_utils.py.
+# COMMAND ----------
+
+# MAGIC %md #### 0. Generate Run ID
+
+# COMMAND ----------
+
+import uuid
+
+run_id = str(uuid.uuid4())
+NOTEBOOK_NAME = "02_silver_transformation"
+
+# COMMAND ----------
+
+from utils.logging_utils import log_step, get_last_write_row_count
 
 # COMMAND ----------
 
@@ -61,137 +75,166 @@ def dedup_on_key(df, key_column):
 # COMMAND ----------
 
 def transform_customer():
-    bronze = spark.table(f"{CATALOG}.bronze.users")
-    bronze = dedup_on_key(bronze, "id")
+    step = "transform customer"
+    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+              NOTEBOOK_NAME, row_count=0)
+    try:
+        bronze = spark.table(f"{CATALOG}.bronze.users")
+        bronze = dedup_on_key(bronze, "id")
 
-    df = bronze.select(
-        F.monotonically_increasing_id().alias("customer_sk"),
-        F.col("id").alias("customer_id"),
-        F.col("current_age").cast("int"),
-        F.col("retirement_age").cast("int"),
-        F.col("birth_year").cast("int"),
-        F.col("birth_month").cast("int"),
-        F.col("gender"),
-        F.col("address"),
-        round_coordinates("latitude").alias("latitude"),
-        round_coordinates("longitude").alias("longitude"),
-        clean_currency("per_capita_income").alias("per_capita_income"),
-        clean_currency("yearly_income").alias("yearly_income"),
-        clean_currency("total_debt").alias("total_debt"),
-        F.col("credit_score").cast("int"),
-        F.col("num_credit_cards").cast("int"),
-        F.col("_batch_id").alias("_bronze_batch_id"),
-    )
-
-    df = df.withColumn(
-        "_dq_flags",
-        build_dq_flags(
-            create_dq_flag(F.col("customer_id").isNull(), F.lit("missing_customer_id")),
-            create_dq_flag(F.col("yearly_income").isNull(), F.lit("invalid_yearly_income")),
-            create_dq_flag(F.col("credit_score").isNull(), F.lit("missing_credit_score")),
+        df = bronze.select(
+            F.monotonically_increasing_id().alias("customer_sk"),
+            F.col("id").alias("customer_id"),
+            F.col("current_age").cast("int"),
+            F.col("retirement_age").cast("int"),
+            F.col("birth_year").cast("int"),
+            F.col("birth_month").cast("int"),
+            F.col("gender"),
+            F.col("address"),
+            round_coordinates("latitude").alias("latitude"),
+            round_coordinates("longitude").alias("longitude"),
+            clean_currency("per_capita_income").alias("per_capita_income"),
+            clean_currency("yearly_income").alias("yearly_income"),
+            clean_currency("total_debt").alias("total_debt"),
+            F.col("credit_score").cast("int"),
+            F.col("num_credit_cards").cast("int"),
+            F.col("_batch_id").alias("_bronze_batch_id"),
         )
-    )
 
-    return add_ingestion_metadata(df, load_date, "dim_customer","silver")
+        df = df.withColumn(
+            "_dq_flags",
+            build_dq_flags(
+                create_dq_flag(F.col("customer_id").isNull(), F.lit("missing_customer_id")),
+                create_dq_flag(F.col("yearly_income").isNull(), F.lit("invalid_yearly_income")),
+                create_dq_flag(F.col("credit_score").isNull(), F.lit("missing_credit_score")),
+            )
+        )
+
+        return add_ingestion_metadata(df, load_date, "dim_customer","silver")
+    except Exception as e:
+        log_step(spark, dbutils, run_id, "silver", "dim_customer", "transform", "FAILED",
+                  NOTEBOOK_NAME, error_message=str(e))
+        raise
 
 # COMMAND ----------
 
 def transform_card():
-    bronze = spark.table(f"{CATALOG}.bronze.cards")
-    bronze = dedup_on_key(bronze, "id")
+    step = "transform card"
+    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+              NOTEBOOK_NAME, row_count=0)
+    try:
+        bronze = spark.table(f"{CATALOG}.bronze.cards")
+        bronze = dedup_on_key(bronze, "id")
 
-    df = bronze.select(
-        F.monotonically_increasing_id().alias("card_sk"),
-        F.col("id").alias("card_id"),
-        F.col("client_id").alias("customer_id"),
-        F.col("card_brand"),
-        F.col("card_type"),
-        mask_card_number("card_number").alias("card_number_masked"),
-        F.substring(F.col("card_number"), -4, 4).alias("card_number_last4"),
-        F.col("has_chip").cast("boolean"),
-        F.col("card_on_dark_web").cast("boolean"),
-        F.col("num_cards_issued").cast("int"),
-        clean_currency("credit_limit").alias("credit_limit"),
-        F.to_date(F.col("acct_open_date")).alias("acct_open_date"),
-        F.col("year_pin_last_changed").cast("int"),
-        F.col("expires"),
-        F.col("_batch_id").alias("_bronze_batch_id"),
-    )
-
-    df = df.withColumn(
-        "_dq_flags",
-        build_dq_flags(
-            create_dq_flag(F.col("card_id").isNull(), F.lit("missing_card_id")),
-            create_dq_flag(F.col("credit_limit").isNull(), F.lit("invalid_credit_limit")),
+        df = bronze.select(
+            F.monotonically_increasing_id().alias("card_sk"),
+            F.col("id").alias("card_id"),
+            F.col("client_id").alias("customer_id"),
+            F.col("card_brand"),
+            F.col("card_type"),
+            mask_card_number("card_number").alias("card_number_masked"),
+            F.substring(F.col("card_number"), -4, 4).alias("card_number_last4"),
+            F.col("has_chip").cast("boolean"),
+            F.col("card_on_dark_web").cast("boolean"),
+            F.col("num_cards_issued").cast("int"),
+            clean_currency("credit_limit").alias("credit_limit"),
+            F.to_date(F.col("acct_open_date")).alias("acct_open_date"),
+            F.col("year_pin_last_changed").cast("int"),
+            F.col("expires"),
+            F.col("_batch_id").alias("_bronze_batch_id"),
         )
-    )
 
-    return add_ingestion_metadata(df, load_date, "dim_card","silver")
+        df = df.withColumn(
+            "_dq_flags",
+            build_dq_flags(
+                create_dq_flag(F.col("card_id").isNull(), F.lit("missing_card_id")),
+                create_dq_flag(F.col("credit_limit").isNull(), F.lit("invalid_credit_limit")),
+            )
+        )
 
+        return add_ingestion_metadata(df, load_date, "dim_card","silver")
+    except Exception as e:
+            log_step(spark, dbutils, run_id, "silver", "dim_card", "transform", "FAILED",
+                      NOTEBOOK_NAME, error_message=str(e))
+            raise
 # COMMAND ----------
 
 def transform_mcc():
-    bronze = spark.table(f"{CATALOG}.bronze.mcc_codes")
-    bronze = dedup_on_key(bronze, "mcc_code")
+    step = "transform mcc"
+    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+                  NOTEBOOK_NAME, row_count=0)
+    try:
+        bronze = spark.table(f"{CATALOG}.bronze.mcc_codes")
+        bronze = dedup_on_key(bronze, "mcc_code")
 
-    df = bronze.select(
-        F.monotonically_increasing_id().alias("mcc_sk"),
-        F.col("mcc_code"),
-        F.col("mcc_description"),
-        F.col("_batch_id").alias("_bronze_batch_id"),
-    )
+        df = bronze.select(
+            F.monotonically_increasing_id().alias("mcc_sk"),
+            F.col("mcc_code"),
+            F.col("mcc_description"),
+            F.col("_batch_id").alias("_bronze_batch_id"),
+        )
 
-    return add_ingestion_metadata(df, load_date, "dim_mcc","silver")
-
+        return add_ingestion_metadata(df, load_date, "dim_mcc","silver")
+    except Exception as e:
+        log_step(spark, dbutils, run_id, "silver", "dim_mcc", "transform", "FAILED",
+                  NOTEBOOK_NAME, error_message=str(e))
+        raise
 # COMMAND ----------
 
 def transform_transactions():
-    txn = spark.table(f"{CATALOG}.bronze.transactions")
-    txn = dedup_on_key(txn, "id")
+    step = "transform transactions"
+    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+              NOTEBOOK_NAME, row_count=0)
+    try:
+        txn = spark.table(f"{CATALOG}.bronze.transactions")
+        txn = dedup_on_key(txn, "id")
 
-    labels = spark.table(f"{CATALOG}.bronze.fraud_labels")
+        labels = spark.table(f"{CATALOG}.bronze.fraud_labels")
 
-    df = txn.select(
-        F.monotonically_increasing_id().alias("transaction_sk"),
-        F.col("id").alias("transaction_id"),
-        F.to_timestamp(F.col("date")).alias("transaction_datetime"),
-        F.col("client_id").alias("customer_id"),
-        F.col("card_id"),
-        clean_currency("amount").alias("amount"),
-        F.col("use_chip").alias("channel"),
-        F.col("merchant_id"),
-        F.col("merchant_city"),
-        F.col("merchant_state"),
-        F.col("zip"),
-        F.col("mcc").alias("mcc_code"),
-        F.when(F.col("errors").isNotNull(), F.lit(True)).otherwise(F.lit(False)).alias("has_error"),
-        F.col("errors").alias("error_detail"),
-        F.col("_batch_id").alias("_bronze_batch_id_transactions"),
-    )
-
-    df = df.join(
-        labels.select(
-            F.col("transaction_id"),
-            F.when(F.col("is_fraud_label") == "Yes", True)
-             .when(F.col("is_fraud_label") == "No", False)
-             .otherwise(F.lit(None)).alias("is_fraud"),
-            F.col("_batch_id").alias("_bronze_batch_id_fraud_labels"),
-        ),
-        on="transaction_id",
-        how="left",
-    )
-
-    df = df.withColumn(
-        "_dq_flags",
-        build_dq_flags(
-            create_dq_flag(F.col("amount").isNull(), F.lit("invalid_amount")),
-            create_dq_flag(F.col("transaction_datetime").isNull(), F.lit("invalid_datetime")),
-            create_dq_flag(F.col("customer_id").isNull(), F.lit("missing_customer_id")),
+        df = txn.select(
+            F.monotonically_increasing_id().alias("transaction_sk"),
+            F.col("id").alias("transaction_id"),
+            F.to_timestamp(F.col("date")).alias("transaction_datetime"),
+            F.col("client_id").alias("customer_id"),
+            F.col("card_id"),
+            clean_currency("amount").alias("amount"),
+            F.col("use_chip").alias("channel"),
+            F.col("merchant_id"),
+            F.col("merchant_city"),
+            F.col("merchant_state"),
+            F.col("zip"),
+            F.col("mcc").alias("mcc_code"),
+            F.when(F.col("errors").isNotNull(), F.lit(True)).otherwise(F.lit(False)).alias("has_error"),
+            F.col("errors").alias("error_detail"),
+            F.col("_batch_id").alias("_bronze_batch_id_transactions"),
         )
-    )
 
-    return add_ingestion_metadata(df, load_date, "fact_transactions", "silver")
+        df = df.join(
+            labels.select(
+                F.col("transaction_id"),
+                F.when(F.col("is_fraud_label") == "Yes", True)
+                .when(F.col("is_fraud_label") == "No", False)
+                .otherwise(F.lit(None)).alias("is_fraud"),
+                F.col("_batch_id").alias("_bronze_batch_id_fraud_labels"),
+            ),
+            on="transaction_id",
+            how="left",
+        )
 
+        df = df.withColumn(
+            "_dq_flags",
+            build_dq_flags(
+                create_dq_flag(F.col("amount").isNull(), F.lit("invalid_amount")),
+                create_dq_flag(F.col("transaction_datetime").isNull(), F.lit("invalid_datetime")),
+                create_dq_flag(F.col("customer_id").isNull(), F.lit("missing_customer_id")),
+            )
+        )
+
+        return add_ingestion_metadata(df, load_date, "fact_transactions", "silver")
+    except Exception as e:
+        log_step(spark, dbutils, run_id, "silver", "fact_transactions", "transform", "FAILED",
+                  NOTEBOOK_NAME, error_message=str(e))
+        raise
 # COMMAND ----------
 
 # MAGIC %md #### 5. Dispatch
@@ -210,8 +253,6 @@ if silver_table not in TRANSFORM_MAP:
 
 df_silver = TRANSFORM_MAP[silver_table]()
 
-row_count = df_silver.count()
-print(f"{silver_table}: {row_count:,} rows")
 
 # COMMAND ----------
 
@@ -231,19 +272,28 @@ if silver_table == "fact_transactions":
         .write.format("delta").mode("overwrite").option("overwriteSchema", "true")
         .partitionBy("txn_year", "txn_month")
     )
+step = "write_delta"
+try:
+    write.save(silver_path)
 
-write.save(silver_path)
+    spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {CATALOG}.silver.{silver_table}
+    USING DELTA
+    LOCATION '{silver_path}'
+    """)
 
-spark.sql(f"""
-CREATE TABLE IF NOT EXISTS {CATALOG}.silver.{silver_table}
-USING DELTA
-LOCATION '{silver_path}'
-""")
+    spark.sql(f"OPTIMIZE {CATALOG}.silver.{silver_table}")
+    actual_row_count = get_last_write_row_count(spark, f"{CATALOG}.silver.{silver_table}")
+    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+              NOTEBOOK_NAME, row_count=actual_row_count)
+    
+    print(f"Silver write complete: {silver_path} | rows={actual_row_count}")
 
-spark.sql(f"OPTIMIZE {CATALOG}.silver.{silver_table}")
-
-print(f"Silver write complete: {silver_path}")
+except Exception as e:
+    log_step(spark, dbutils, run_id, "silver", silver_table, step, "FAILED",
+            NOTEBOOK_NAME, error_message=str(e))
+    raise
 
 # COMMAND ----------
 
-dbutils.notebook.exit(f"SUCCESS: {silver_table} | rows={row_count}")
+dbutils.notebook.exit(f"SUCCESS: {silver_table} | rows={actual_row_count}")

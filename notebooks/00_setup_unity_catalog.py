@@ -91,3 +91,37 @@ spark.sql(f"SHOW TABLES IN {CATALOG}.bronze").show(truncate=False)
 for entity in BRONZE_ENTITIES:
     count = spark.sql(f"SELECT COUNT(*) as cnt FROM {CATALOG}.bronze.{entity}").collect()[0]["cnt"]
     print(f"{entity}: {count:,} rows")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### 6. Create control schema under cl_finance_fraud_dev catalog to store log details
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE SCHEMA IF NOT EXISTS cl_finance_fraud_dev.control;
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS cl_finance_fraud_dev.control.pipeline_logs (
+# MAGIC     run_id STRING,
+# MAGIC     pipeline_layer STRING,
+# MAGIC     table_name STRING,
+# MAGIC     step_name STRING,
+# MAGIC     status STRING,
+# MAGIC     logged_at TIMESTAMP,
+# MAGIC     row_count INT,
+# MAGIC     error_message STRING,
+# MAGIC     notebook_name STRING,
+# MAGIC     triggered_by STRING,
+# MAGIC     load_type STRING,
+# MAGIC     job_id STRING,
+# MAGIC     databricks_run_id STRING
+# MAGIC )
+# MAGIC USING DELTA
+# MAGIC TBLPROPERTIES (
+# MAGIC   'delta.autoOptimize.optimizeWrite' = 'true',
+# MAGIC   'delta.autoOptimize.autoCompact' = 'true'
+# MAGIC );
