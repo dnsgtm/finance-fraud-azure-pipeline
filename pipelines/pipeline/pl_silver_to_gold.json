@@ -1,0 +1,97 @@
+{
+	"name": "pl_silver_to_gold",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetGoldConfig",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_gold_config",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach_GoldTable",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetGoldConfig",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetGoldConfig').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "AggregateToGold",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gautamdinesh27@hotmail.com/finance-fraud-azure-pipeline/notebooks/03_gold_aggregation",
+								"baseParameters": {
+									"gold_table": {
+										"value": "@item().gold_table",
+										"type": "Expression"
+									},
+									"load_date": {
+										"value": "@pipeline().parameters.p_load_date",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_databricks",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_load_date": {
+				"type": "string",
+				"defaultValue": "2026-07-16"
+			}
+		},
+		"annotations": []
+	}
+}

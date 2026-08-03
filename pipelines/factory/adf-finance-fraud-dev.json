@@ -9,7 +9,7 @@
 	"location": "australiaeast",
 	"identity": {
 		"type": "SystemAssigned",
-		"principalId": "81e6c1fc-24a7-4b85-8416-86103ae3f47c",
+		"principalId": "7c8d0c30-bc16-4116-af5a-8cb6bd411c49",
 		"tenantId": "01d46a8a-4ffc-46db-bedd-4e58c5861d2d"
 	}
 }
