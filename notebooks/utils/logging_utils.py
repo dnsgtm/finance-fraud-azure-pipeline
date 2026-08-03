@@ -20,18 +20,14 @@ LOG_SCHEMA = StructType([
 ])
 
 
-def get_run_context(dbutils):
+def get_run_context(spark):
     """
-    Pulls Databricks job/run context. job_id is absent when running
-    interactively (manual), present when triggered by ADF or a Databricks
-    schedule - used to derive triggered_by.
+    Pulls Databricks job/run context via Spark conf - safe on Unity Catalog
+    process-isolated clusters, unlike the internal CommandContext API.
     """
 
-    ctx = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
-    tags = ctx.tags()
-
-    job_id = tags.get("jobId").getOrElse(None)
-    run_id = tags.get("runId").getOrElse(None)
+    job_id = spark.conf.get("spark.databricks.job.id", None)
+    run_id = spark.conf.get("spark.databricks.job.runId", None)
 
     return {
         "job_id": job_id if job_id else "MANUAL",
@@ -52,14 +48,10 @@ def get_last_write_row_count(spark, full_table_name):
     return int(count) if count is not None else None
 
 
-def log_step(spark, dbutils, run_id, pipeline_layer, table_name, step_name, status,
+def log_step(spark, run_id, pipeline_layer, table_name, step_name, status,
              notebook_name, load_type="overwrite", error_message=None, row_count=None):
-    """
-    Writes one row to control.pipeline_logs immediately - so a log entry
-    survives even if the notebook crashes right after this call.
-    """
 
-    ctx = get_run_context(dbutils)
+    ctx = get_run_context(spark)
 
     log_df = spark.createDataFrame(
         [(

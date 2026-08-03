@@ -4,6 +4,7 @@
 # MAGIC Generic transformation notebook - handles all 4 silver tables via widget
 # MAGIC params (silver_table, load_date). Called once per table by the ForEach
 # MAGIC loop in pl_bronze_to_silver. Sources shared logic from utils/transformation_utils.py.
+
 # COMMAND ----------
 
 # MAGIC %md #### 0. Generate Run ID
@@ -76,7 +77,7 @@ def dedup_on_key(df, key_column):
 
 def transform_customer():
     step = "transform customer"
-    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+    log_step(spark, run_id, "silver", silver_table, step, "STARTED",
               NOTEBOOK_NAME, row_count=0)
     try:
         bronze = spark.table(f"{CATALOG}.bronze.users")
@@ -112,7 +113,7 @@ def transform_customer():
 
         return add_ingestion_metadata(df, load_date, "dim_customer","silver")
     except Exception as e:
-        log_step(spark, dbutils, run_id, "silver", "dim_customer", "transform", "FAILED",
+        log_step(spark, run_id, "silver", "dim_customer", "transform", "FAILED",
                   NOTEBOOK_NAME, error_message=str(e))
         raise
 
@@ -120,7 +121,7 @@ def transform_customer():
 
 def transform_card():
     step = "transform card"
-    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+    log_step(spark, run_id, "silver", silver_table, step, "STARTED",
               NOTEBOOK_NAME, row_count=0)
     try:
         bronze = spark.table(f"{CATALOG}.bronze.cards")
@@ -154,14 +155,15 @@ def transform_card():
 
         return add_ingestion_metadata(df, load_date, "dim_card","silver")
     except Exception as e:
-            log_step(spark, dbutils, run_id, "silver", "dim_card", "transform", "FAILED",
+            log_step(spark, run_id, "silver", "dim_card", "transform", "FAILED",
                       NOTEBOOK_NAME, error_message=str(e))
             raise
+
 # COMMAND ----------
 
 def transform_mcc():
     step = "transform mcc"
-    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+    log_step(spark, run_id, "silver", silver_table, step, "STARTED",
                   NOTEBOOK_NAME, row_count=0)
     try:
         bronze = spark.table(f"{CATALOG}.bronze.mcc_codes")
@@ -176,14 +178,15 @@ def transform_mcc():
 
         return add_ingestion_metadata(df, load_date, "dim_mcc","silver")
     except Exception as e:
-        log_step(spark, dbutils, run_id, "silver", "dim_mcc", "transform", "FAILED",
+        log_step(spark, run_id, "silver", "dim_mcc", "transform", "FAILED",
                   NOTEBOOK_NAME, error_message=str(e))
         raise
+
 # COMMAND ----------
 
 def transform_transactions():
     step = "transform transactions"
-    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+    log_step(spark, run_id, "silver", silver_table, step, "STARTED",
               NOTEBOOK_NAME, row_count=0)
     try:
         txn = spark.table(f"{CATALOG}.bronze.transactions")
@@ -232,9 +235,10 @@ def transform_transactions():
 
         return add_ingestion_metadata(df, load_date, "fact_transactions", "silver")
     except Exception as e:
-        log_step(spark, dbutils, run_id, "silver", "fact_transactions", "transform", "FAILED",
+        log_step(spark, run_id, "silver", "fact_transactions", "transform", "FAILED",
                   NOTEBOOK_NAME, error_message=str(e))
         raise
+
 # COMMAND ----------
 
 # MAGIC %md #### 5. Dispatch
@@ -284,13 +288,13 @@ try:
 
     spark.sql(f"OPTIMIZE {CATALOG}.silver.{silver_table}")
     actual_row_count = get_last_write_row_count(spark, f"{CATALOG}.silver.{silver_table}")
-    log_step(spark, dbutils, run_id, "silver", silver_table, step, "SUCCESS",
+    log_step(spark, run_id, "silver", silver_table, step, "SUCCESS",
               NOTEBOOK_NAME, row_count=actual_row_count)
     
     print(f"Silver write complete: {silver_path} | rows={actual_row_count}")
 
 except Exception as e:
-    log_step(spark, dbutils, run_id, "silver", silver_table, step, "FAILED",
+    log_step(spark, run_id, "silver", silver_table, step, "FAILED",
             NOTEBOOK_NAME, error_message=str(e))
     raise
 
